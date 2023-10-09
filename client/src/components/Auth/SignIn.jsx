@@ -55,7 +55,7 @@ const SignIn = () => {
                                 </div>
                                 <div className="form-group mt-2">
                                     <label className="d-flex flex-row align-items-center" htmlFor="password">Password
-                                        <a className="ml-auto border-link small-xl" href="/forget-password">Forget?</a></label>
+                                    </label>
                                     <input type="password" autoComplete='off' className="form-control" name="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                                 </div>
                                 <div className="form-group mt-4 mb-4 ">
@@ -63,6 +63,7 @@ const SignIn = () => {
                                         <input type="checkbox" className="custom-control-input" id="remember-me" name="remember-me" data-parsley-multiple="remember-me" />
                                         <label className="custom-control-label" htmlFor="remember-me">Remember me?</label>
                                     </div>
+                                    <Link className="ml-auto border-link small-xl" to="/forget-password">Forget Password?</Link>
                                 </div>
 
 

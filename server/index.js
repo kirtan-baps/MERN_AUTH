@@ -12,6 +12,8 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { verifyUser } = require('./middlewares/authMiddleware.js');
 
+const nodemailer = require('nodemailer');
+
 
 
 // import { verifyUser } from "./middlewares/authMiddleware";
@@ -130,6 +132,74 @@ app.get('/home', verifyUser, (req, res) => {
     return res.json('Success');
 })
 
+// // ===================================
+
+app.post('/forget-password', (req, res) => {
+    const { email } = req.body;
+    UsersModel.findOne({ email })
+        .then(user => {
+            if (!user) {
+                res.send({ status: "Email Not Found" })
+            }
+            const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, { expiresIn: '1d' })
+
+            // ------------Node Mailer Code------------------------
+
+            var transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: 'kirtan.darji22@gmail.com',
+                    pass: process.env.NODE_MAILER_GOOGLE_ACCOUNT_PASSWORD
+                }
+            });
+
+            var mailOptions = {
+                from: 'kirtan.darji22@gmail.com',
+                // to: 'myfriend@yahoo.com',
+                to: email,
+                subject: 'Reset your Password',
+                text: `Please Don't share this with anyone. \nTap to reset Password: http://localhost:3000/reset-password/${user._id}/${token}`
+            };
+
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+
+                    return res.json({ status: 'Success' });
+                }
+            });
+
+            // ------------------------------------
+
+            // return res.json({ status: 'Success' });
+        })
+        .catch(err => console.log(err))
+})
+
+// ======
+
+app.post('/reset-password/:id/:token', (req, res) => {
+    const { id, token } = req.params;
+    const { password } = req.body;
+
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.json({ status: "Error in token" });
+        } else {
+            bcrypt.hash(password, 10)
+                .then(hashedPassword => {
+                    UsersModel.findByIdAndUpdate({ _id: id }, { password: hashedPassword })
+                        .then(result => res.json({ status: "Success" }))
+                        .catch(err => console.log(err))
+                })
+        }
+    })
+
+})
+
+
 
 
 // ===================================
@@ -137,3 +207,4 @@ app.get('/home', verifyUser, (req, res) => {
 app.listen(PORT, () => {
     console.log(`server started on ${PORT}`);
 })
+
